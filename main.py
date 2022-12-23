@@ -1,3 +1,5 @@
+import json
+import subprocess
 import sys
 import time
 from datetime import datetime
@@ -27,8 +29,6 @@ except ImportError as e:
 
 CERTIFICATE_DOMAIN = os.environ.get("CERTIFICATE_DOMAIN", "truenas.local")
 
-TRUENAS_API_KEY = os.environ.get("TRUENAS_API_KEY", None)
-TRUENAS_ADDRESS = os.environ.get("TRUENAS_ADDRESS", "http://localhost")
 TRUENAS_USE_CERT_FOR__UI = os.environ.get("TRUENAS_USE_CERT_FOR__UI", "True") == "True"
 TRUENAS_USE_CERT_FOR__S3 =  os.environ.get("TRUENAS_USE_CERT_FOR__S3", "False") == "True"
 TRUENAS_USE_CERT_FOR__FTP = os.environ.get("TRUENAS_USE_CERT_FOR__FTP", "False") == "True"
@@ -43,8 +43,42 @@ ACCOUNT_PRIVATE_PATH = os.environ.get("ACCOUNT_PRIVATE_PATH", "acme_account_key.
 
 VERIFY_SSL_CERT = os.environ.get("VERIFY_SSL_CERT", "False") == "True"
 
-if TRUENAS_API_KEY is None:
-    raise KeyError("No API key for truenas is present")
+def delete_truenas_api_key():
+    proc = subprocess.Popen("midclt call api_key.query", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    stdout, stderr = proc.communicate()
+
+    try:
+        apikeys_query_result = json.loads(stdout)
+    except json.JSONDecodeError as e:
+        logger.error(f"Failed list api keys from truenas \"{stdout}\" \"{stderr}\"", exc_info=e)
+        sys.exit(-1)
+
+    key_already_present = [x for x in apikeys_query_result if x["name"] == "trueacme_temp"]
+    if len(key_already_present) > 0:
+        logger_truenas.warning("trueacme_temp api key was already present, deleting")
+        subprocess.Popen(f"midclt call api_key.delete {key_already_present[0]['id']}", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        time.sleep(0.5)
+    else:
+        logger_truenas.info("trueacme_temp not present")
+def get_truenas_api_key():
+    delete_truenas_api_key()
+
+    logger_truenas.info("Creating trueacme_temp api key")
+
+    proc = subprocess.Popen("midclt call api_key.create '{\"name\":\"trueacme_temp\"}'", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    stdout, stderr = proc.communicate()
+
+    try:
+        apikeys_create_result = json.loads(stdout)
+    except json.JSONDecodeError as e:
+        logger.error(f"Failed create truenas api key \"{stdout}\" \"{stderr}\"", exc_info=e)
+        sys.exit(-1)
+
+    logger_truenas.info(f"Got a new API key: {apikeys_create_result['key']}")
+    return apikeys_create_result['key']
+
+TRUENAS_ADDRESS = "http://localhost"
+TRUENAS_API_KEY = get_truenas_api_key()
 
 
 account_exists = os.path.exists(ACCOUNT_PRIVATE_PATH)

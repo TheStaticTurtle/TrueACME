@@ -2,21 +2,36 @@
 
 TrueACME is a python script to deploy TLS certificate to TrueNAS.
 
-Currently, it uses a standalone server running on port 3000 that the acme server needs to access to validate the challenge. 
-You can achieve this by some rules on your reverse proxy of if you run an acme locally, you can modifiy the `/etc/hosts` file temporarily for example.
+Currently, the script starts a standalone server running on randomly selected free port. 
+It then temporarily patch the `/usr/local/etc/nginx/nginx.conf` config to add a new proxypass to the config. For example this part of the config:
+```nginx
+location / {
+    rewrite ^.* $scheme://$http_host/ui/ redirect;
+}
+```
+Will become this after the patch (formatted for readability):
+```nginx
+location /.well-known/acme-challenge { 
+    proxy_pass http://localhost:{server_port}/.well-known/acme-challenge; 
+}
+location / {
+    rewrite ^.* $scheme://$http_host/ui/ redirect;
+}
+```
+`{server_port}` being the randomly selected port.
+You can see the `http01_truenas_provider.py` file to see exactly how that works
 
-The end-goal would be to create a custom provider to be able to run this script on truenas itself without proxies or hacks.
+After an API key from truenas, the script will start the standalone server and will ask the ACME for a challenge.
+Once it's received, the server is re-configured to handle this challenge and as nginx redirect the acme challenge directory to us, the ACME server can validate that we own the domain.
+After all the challenges have been validated, the server stops, and the script start to update the certificates of truenas according to the configuration.
 
-TrueACME uses https://github.com/komuw/sewer as an integrated acme client, so if you need to use an other provider than the standalone http-01 challenge you can do so by implementing it (or stealing it from someone who did)
-
-TrueACME is meant to be configured with environment variable but also support the `.env` file:
+This tool is meant to be run on the TrueNAS box directly, it takes advantage of the `midclt` to create a temporary API key that it uses to update the certs and reload the UI.
+It can be configured with environment variable and also support a `.env` file:
 
 | Name | Default value | What |
 |------|------|---------------|
 |CERTIFICATE_DOMAIN|`truenas.domain.local`|Domain name of truenas|
 |||
-|TRUENAS_API_KEY|`my-api-key`|API Key from truenas|
-|TRUENAS_ADDRESS|`http://truenas.domain.local`|Address of truenas|
 |TRUENAS_USE_CERT_FOR__UI|`True`|Set the certificate for the UI|
 |TRUENAS_USE_CERT_FOR__S3|`False`|Set the certificate for the S3 server|
 |TRUENAS_USE_CERT_FOR__FTP|`False`|Set the certificate for the FTP server|
@@ -34,5 +49,21 @@ TrueACME is meant to be configured with environment variable but also support th
 
 The script also deletes all old certificates with either the CommonName or DNS entries in the SubjectAlternativeName equal to the configured domain
 
+## Install
+TrueACME uses https://github.com/komuw/sewer as an integrated acme client
+
+You will need to install pip, which can be done without the help of `pkg` with the first command. Then you can install the requirements.
+```bash
+python -m ensurepip
+python -m pip install -r requirements.txt
+```
+If your acme don't have a TOS link, you'll also need to apply this pr to komuw/sewer#226
+
 ## License
 See the [LICENSE.md](LICENSE.md) file
+
+## Thanks
+Here are a few things that helped my this script:
+ - https://github.com/komuw/sewer
+ - https://github.com/danb35/deploy-freenas
+ - https://www.truenas.com/docs/scale/scaletutorials/toptoolbar/managingapikeys

@@ -1,0 +1,6 @@
+urllib3
+cryptography
+requests
+coloredlogs
+python-dotenv
+sewer
