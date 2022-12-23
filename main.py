@@ -37,6 +37,7 @@ TRUENAS_USE_CERT_FOR__APPS = os.environ.get("TRUENAS_USE_CERT_FOR__APPS", "False
 TRUENAS_CERT_BASE_NAME = os.environ.get("TRUENAS_CERT_BASE_NAME", "trueacme")
 
 ACME_DIRECTORY_URL = os.environ.get("ACME_DIRECTORY_URL", "https://acme-v02.api.letsencrypt.org/directory")
+ACME_CONTACT_EMAIL = os.environ.get("ACME_CONTACT_EMAIL", "root@localhost")
 CERTIFICATE_PRIVATE_PATH = os.environ.get("CERTIFICATE_PRIVATE_PATH", "certificate.pem")
 CERTIFICATE_PUBLIC_PATH = os.environ.get("CERTIFICATE_PUBLIC_PATH", "certificate.crt")
 ACCOUNT_PRIVATE_PATH = os.environ.get("ACCOUNT_PRIVATE_PATH", "acme_account_key.pem")
@@ -109,7 +110,7 @@ try:
         provider=provider,
         cert_key=certificate_key,
         is_new_acct=not account_exists,
-        contact_email="samuel@tugler.fr",
+        contact_email=ACME_CONTACT_EMAIL,
         ACME_DIRECTORY_URL=ACME_DIRECTORY_URL,
         ACME_VERIFY=VERIFY_SSL_CERT
     )

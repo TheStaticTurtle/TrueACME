@@ -40,6 +40,7 @@ It can be configured with environment variable and also support a `.env` file:
 |TRUENAS_CERT_BASE_NAME|`trueacme`|Prefix in the certificate list|
 |||
 |ACME_DIRECTORY_URL|`https://acme-v02.api.letsencrypt.org/directory`|Url of the acme server|
+|ACME_CONTACT_EMAIL|`root@localhost`|Email for the acme account|
 |||
 |CERTIFICATE_PRIVATE_PATH|`certificate.pem`|Path where the certificate secret key is stored|
 |CERTIFICATE_PUBLIC_PATH|`certificate.crt`|Path where the certificate public key is stored|
