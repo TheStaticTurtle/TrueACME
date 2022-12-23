@@ -279,17 +279,7 @@ for tn_cert_data in truenas_certificate_list:
         if tn_cert_domain == CERTIFICATE_DOMAIN:
             truenas_certs_to_delete.append(tn_cert_data)
             logger.info(f"marked {tn_cert_data['name']} (/{tn_cert_cns}/{tn_cert_san_dns_names}/) for deletion")
-            continue
-
-for tn_cert_data in truenas_certs_to_delete:
-    resp_delete = session.delete(TRUENAS_ADDRESS + f"/api/v2.0/certificate/id/{tn_cert_data['id']}",
-                                 verify=VERIFY_SSL_CERT)
-
-    if resp_delete.status_code == 200:
-        logger_truenas.info(f"Successfully deleted: {tn_cert_data['name']}")
-    else:
-        logger_truenas.info(f"Failed to deleted: {tn_cert_data['name']}: {resp_delete.text}")
-
+            break
 
 if TRUENAS_USE_CERT_FOR__S3:
     resp_restart = session.post(TRUENAS_ADDRESS + '/api/v2.0/service/restart', verify=VERIFY_SSL_CERT, json={
@@ -332,3 +322,14 @@ if TRUENAS_USE_CERT_FOR__UI:
             logger_truenas.info(f"Failed to reload UI: {resp_reload2.text}")
         except requests.exceptions.ConnectionError:
             logger_truenas.info("Successfully reloaded UI")
+
+time.sleep(2.5)
+
+for tn_cert_data in truenas_certs_to_delete:
+    resp_delete = session.delete(TRUENAS_ADDRESS + f"/api/v2.0/certificate/id/{tn_cert_data['id']}",
+                                 verify=VERIFY_SSL_CERT)
+
+    if resp_delete.status_code == 200:
+        logger_truenas.info(f"Successfully deleted: {tn_cert_data['name']}")
+    else:
+        logger_truenas.info(f"Failed to deleted: {tn_cert_data['name']}: {resp_delete.text}")
