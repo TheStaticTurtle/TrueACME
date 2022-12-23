@@ -60,6 +60,10 @@ python -m pip install -r requirements.txt
 ```
 If your acme don't have a TOS link, you'll also need to apply this pr to komuw/sewer#226
 
+Then, test it in the shell and if everything works you can setup a Cron Job like this one:
+![image](https://user-images.githubusercontent.com/17061996/209346901-28be8a37-10d4-44cd-929e-fc3029af945f.png)
+
+
 ## License
 See the [LICENSE.md](LICENSE.md) file
 
