@@ -48,11 +48,13 @@ class ChallengeServer(HTTPServer):
         self.acme_challenges = {}
 
 class Provider(ProviderBase):
-    def __init__(self, host='0.0.0.0', port=80) -> None:
+    def __init__(self, host='0.0.0.0', port=80, logger=None) -> None:
+        if not isinstance(logger, logging.Logger):
+            logger = logging.getLogger("sewer.providers.http01.server")
 
         # Init the base provider with the "http-01" challenge and a default logger
         super().__init__(
-            logger=logging.getLogger("sewer.providers.http01.server"),
+            logger=logger,
             chal_types=["http-01"],
         )
 

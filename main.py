@@ -12,13 +12,23 @@ import sewer.client
 from sewer.crypto import AcmeKey, AcmeAccount
 import http01_provider
 
-from dotenv import load_dotenv
-load_dotenv()
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+coloredlogs.install(level=logging.DEBUG, fmt="[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s")
+logging.getLogger("urllib3.connectionpool").setLevel(logging.INFO)
+logger = logging.getLogger("main.cert")
+logger_truenas = logging.getLogger("main.truenas")
+
+try:
+    if os.path.exists(".env"):
+        from dotenv import load_dotenv
+        load_dotenv()
+except ImportError as e:
+    logger.error("Failed to import dotenv, please install python-dotenv to use a .env file")
 
 CERTIFICATE_DOMAIN = os.environ.get("CERTIFICATE_DOMAIN", "truenas.local")
 
 TRUENAS_API_KEY = os.environ.get("TRUENAS_API_KEY", None)
-TRUENAS_ADDRESS = os.environ.get("TRUENAS_ADDRESS", "http://192.168.1.1")
+TRUENAS_ADDRESS = os.environ.get("TRUENAS_ADDRESS", "http://localhost")
 TRUENAS_USE_CERT_FOR__UI = os.environ.get("TRUENAS_USE_CERT_FOR__UI", "True") == "True"
 TRUENAS_USE_CERT_FOR__S3 =  os.environ.get("TRUENAS_USE_CERT_FOR__S3", "False") == "True"
 TRUENAS_USE_CERT_FOR__FTP = os.environ.get("TRUENAS_USE_CERT_FOR__FTP", "False") == "True"
@@ -36,11 +46,6 @@ VERIFY_SSL_CERT = os.environ.get("VERIFY_SSL_CERT", "False") == "True"
 if TRUENAS_API_KEY is None:
     raise KeyError("No API key for truenas is present")
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-coloredlogs.install(level=logging.DEBUG, fmt="[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s")
-logging.getLogger("urllib3.connectionpool").setLevel(logging.INFO)
-logger = logging.getLogger("main.cert")
-logger_truenas = logging.getLogger("main.truenas")
 
 account_exists = os.path.exists(ACCOUNT_PRIVATE_PATH)
 if account_exists:
