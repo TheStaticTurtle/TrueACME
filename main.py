@@ -12,7 +12,7 @@ from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 import sewer.client
 from sewer.crypto import AcmeKey, AcmeAccount
-import http01_provider
+import http01_truenas_provider
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 coloredlogs.install(level=logging.DEBUG, fmt="[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s")
@@ -50,7 +50,7 @@ def delete_truenas_api_key():
     try:
         apikeys_query_result = json.loads(stdout)
     except json.JSONDecodeError as e:
-        logger.error(f"Failed list api keys from truenas \"{stdout}\" \"{stderr}\"", exc_info=e)
+        logger.error(f"Failed list api keys from truenas \"{stdout}\" \"{stderr}\": {e}")
         sys.exit(-1)
 
     key_already_present = [x for x in apikeys_query_result if x["name"] == "trueacme_temp"]
@@ -71,7 +71,7 @@ def get_truenas_api_key():
     try:
         apikeys_create_result = json.loads(stdout)
     except json.JSONDecodeError as e:
-        logger.error(f"Failed create truenas api key \"{stdout}\" \"{stderr}\"", exc_info=e)
+        logger.error(f"Failed create truenas api key \"{stdout}\" \"{stderr}\": {e}")
         sys.exit(-1)
 
     logger_truenas.info(f"Got a new API key: {apikeys_create_result['key']}")
@@ -100,7 +100,7 @@ else:
     certificate_key.write_pem(CERTIFICATE_PRIVATE_PATH)
 
 try:
-    provider = http01_provider.Provider(host="0.0.0.0", port=3000)
+    provider = http01_truenas_provider.Provider()
 
     client = sewer.client.Client(
         domain_name=CERTIFICATE_DOMAIN,
@@ -117,7 +117,7 @@ try:
     certificate_armor = client.get_certificate()
 
 except Exception as e:
-    logger.error(f"Failed to create a certificate for {CERTIFICATE_DOMAIN}:", exc_info=e)
+    logger.error(f"Failed to create a certificate for {CERTIFICATE_DOMAIN}: {e}")
     sys.exit(-1)
 
 with open(CERTIFICATE_PUBLIC_PATH, 'w') as f:
