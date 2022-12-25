@@ -30,6 +30,8 @@ It can be configured with environment variable and also support a `.env` file:
 
 | Name | Default value | What |
 |------|------|---------------|
+|TRUENAS_NGNIX_CONFIG_PATH|`/usr/local/etc/nginx/nginx.conf`|Path of the nginx config file (Use `/etc/nginx/nginx.conf` for scale)|
+|||
 |CERTIFICATE_DOMAIN|`truenas.domain.local`|Domain name of truenas|
 |||
 |TRUENAS_USE_CERT_FOR__UI|`True`|Set the certificate for the UI|
