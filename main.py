@@ -65,19 +65,29 @@ def delete_truenas_api_key():
         logger_truenas.info("trueacme_temp not present")
 def get_truenas_api_key():
     delete_truenas_api_key()
+    #midclt call api_key.create '{"name":"api key 2", "allowlist": [{"method": "*", "resource": "*"}]}'
 
     logger_truenas.info("Creating trueacme_temp api key")
 
-    proc = subprocess.Popen("midclt call api_key.create '{\"name\":\"trueacme_temp\"}'", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-    stdout, stderr = proc.communicate()
-
     try:
+        proc = subprocess.Popen("midclt call api_key.create '{\"name\":\"trueacme_temp\", \"allowlist\": [{\"method\": \"*\", \"resource\": \"*\"}]}'", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        stdout, stderr = proc.communicate()
         apikeys_create_result = json.loads(stdout)
-    except json.JSONDecodeError as e:
-        logger.error(f"Failed create truenas api key \"{stdout}\" \"{stderr}\": {e}")
-        sys.exit(-1)
 
-    logger_truenas.info(f"Got a new API key: {apikeys_create_result['key']}")
+        logger_truenas.info(f"Got a new API key with allowlist : {apikeys_create_result['key']}")
+    except json.JSONDecodeError as e:
+        logger.warning(f"Failed create truenas api key  with allowlist, trying without. \"{stdout}\" \"{stderr}\": {e}")
+
+        try:
+            proc = subprocess.Popen("midclt call api_key.create '{\"name\":\"trueacme_temp\"}'", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            stdout, stderr = proc.communicate()
+            apikeys_create_result = json.loads(stdout)
+
+            logger_truenas.info(f"Got a new API key WITHOUT allowlist : {apikeys_create_result['key']}")
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed create truenas api key \"{stdout}\" \"{stderr}\": {e}")
+            sys.exit(-1)
+
     return apikeys_create_result['key']
 
 TRUENAS_ADDRESS = "http://localhost"
