@@ -53,9 +53,8 @@ The script also deletes all old certificates with either the CommonName or DNS e
 ## Install
 TrueACME uses https://github.com/komuw/sewer as an integrated acme client
 
-You will need to install pip, which can be done without the help of `pkg` with the first command. Then you can install the requirements.
+You will need to install pip, you can follow these instructions https://pip.pypa.io/en/stable/installation/ . Then you can install the requirements.
 ```bash
-python -m ensurepip
 python -m pip install -r requirements.txt
 ```
 If your acme don't have a TOS link, you'll also need to apply this pr to komuw/sewer#226
