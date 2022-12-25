@@ -3,6 +3,7 @@ import socket
 from contextlib import closing
 import http01_provider
 import subprocess
+import os
 
 TRUENAS_NGNIX_CONFIG_PATH = os.environ.get("TRUENAS_NGNIX_CONFIG_PATH", "/usr/local/etc/nginx/nginx.conf") 
 TRUENAS_NGNIX_WELLKNOWN = "location /.well-known/acme-challenge { proxy_pass http://localhost:{server_port}/.well-known/acme-challenge; }"
