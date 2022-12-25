@@ -12,7 +12,6 @@ from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 import sewer.client
 from sewer.crypto import AcmeKey, AcmeAccount
-import http01_truenas_provider
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 coloredlogs.install(level=logging.DEBUG, fmt="[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s")
@@ -26,6 +25,9 @@ try:
         load_dotenv()
 except ImportError as e:
     logger.error("Failed to import dotenv, please install python-dotenv to use a .env file")
+
+# Import later because of the .env
+import http01_truenas_provider
 
 CERTIFICATE_DOMAIN = os.environ.get("CERTIFICATE_DOMAIN", "truenas.local")
 
